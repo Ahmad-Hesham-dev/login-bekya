@@ -258,7 +258,12 @@
             window.location.href = 'https://ahmad-hesham-dev.github.io/SELLER-FORM-/';
           } else if (role === 'outlet') {
             window.location.href = 'https://ahmad-hesham-dev.github.io/OUTLET-FORM/';
-          } else {
+          }  
+           else if (role === 'Admin') {
+            window.location.href = 'https://ahmad-hesham-dev.github.io/Admin-bekya/';
+          }
+          
+          else {
             errorDiv.textContent = 'User role not recognized.';
             errorDiv.classList.add('show');
           }
