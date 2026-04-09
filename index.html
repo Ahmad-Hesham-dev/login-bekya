@@ -13,7 +13,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       background: #ffffff;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -23,7 +22,6 @@
       justify-content: center;
       padding: 1.5rem;
     }
-
     .login-card {
       background: #ffffff;
       width: 100%;
@@ -34,12 +32,10 @@
       border: 1px solid rgba(15, 81, 50, 0.1);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
     .login-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 28px 48px -12px rgba(15, 81, 50, 0.25);
     }
-
     h1 {
       color: #0f5132;
       font-weight: 600;
@@ -47,7 +43,6 @@
       letter-spacing: -0.02em;
       margin-bottom: 0.25rem;
     }
-
     .sub {
       color: #0f5132;
       font-size: 0.95rem;
@@ -57,11 +52,9 @@
       padding-left: 0.75rem;
       font-weight: 400;
     }
-
     .field {
       margin-bottom: 2rem;
     }
-
     label {
       display: block;
       color: #0f5132;
@@ -71,7 +64,6 @@
       letter-spacing: 0.03em;
       margin-bottom: 0.5rem;
     }
-
     input {
       width: 100%;
       background: #ffffff;
@@ -83,18 +75,15 @@
       outline: none;
       transition: all 0.2s;
     }
-
     input:focus {
       border-color: #0f5132;
       box-shadow: 0 0 0 4px rgba(15, 81, 50, 0.15);
     }
-
     input::placeholder {
       color: #0f5132;
       opacity: 0.4;
       font-weight: 300;
     }
-
     button {
       width: 100%;
       background: #0f5132;
@@ -110,16 +99,13 @@
       letter-spacing: 0.5px;
       border: 1px solid #0f5132;
     }
-
     button:hover {
       background: #0d6e3a;
       box-shadow: 0 8px 18px -6px rgba(15, 81, 50, 0.4);
     }
-
     button:active {
       transform: scale(0.97);
     }
-
     .error-message {
       color: #d32f2f;
       font-size: 0.9rem;
@@ -130,16 +116,13 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
-
     .error-message.show {
       opacity: 1;
     }
-
     .register-link {
       text-align: center;
       margin-top: 2rem;
     }
-
     .register-link a {
       color: #0f5132;
       text-decoration: none;
@@ -148,11 +131,9 @@
       border-bottom: 1px dashed rgba(15, 81, 50, 0.3);
       transition: border-color 0.2s;
     }
-
     .register-link a:hover {
       border-bottom-color: #0f5132;
     }
-
     @media (max-width: 480px) {
       .login-card {
         padding: 2rem 1.5rem;
@@ -161,7 +142,6 @@
         font-size: 2rem;
       }
     }
-
     @media (max-width: 360px) {
       .login-card {
         padding: 1.5rem 1rem;
@@ -176,17 +156,18 @@
   <div class="login-card">
     <h1>BEKYA</h1>
     <div class="sub">welcome back</div>
-
     <form id="loginForm" novalidate>
       <div class="field">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" placeholder="enter your username" autocomplete="off">
       </div>
-
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="enter your password" autocomplete="off">
+      </div>
       <button type="submit" id="loginBtn">Log in →</button>
       <div id="errorMessage" class="error-message"></div>
     </form>
-
     <div class="register-link">
       <a href="https://ahmad-hesham-dev.github.io/FORM-BEKYA/">don't have an account? register</a>
     </div>
@@ -203,27 +184,39 @@
       // Get DOM elements
       const form = document.getElementById('loginForm');
       const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
       const errorDiv = document.getElementById('errorMessage');
+
+      // Password validation function (letters + numbers + min 8 chars)
+      function isValidPassword(pw) {
+        return pw.length >= 8 && /^[a-zA-Z0-9]+$/.test(pw);
+      }
 
       // Handle form submission
       form.addEventListener('submit', async function(event) {
         event.preventDefault();
 
         const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
 
         errorDiv.textContent = '';
         errorDiv.classList.remove('show');
 
-        if (!username) {
-          errorDiv.textContent = 'Please enter your username.';
+        if (!username || !password) {
+          errorDiv.textContent = 'Please enter username and password.';
           errorDiv.classList.add('show');
           return;
         }
 
-        // --- AUTHENTICATION LOGIC (existing localStorage check, kept unchanged) ---
+        if (!isValidPassword(password)) {
+          errorDiv.textContent = 'Password must contain letters and numbers, at least 8 characters.';
+          errorDiv.classList.add('show');
+          return;
+        }
+
+        // --- AUTHENTICATION LOGIC (now checks both username + password) ---
         const storedUsers = localStorage.getItem('users');
         let users = [];
-
         if (storedUsers) {
           try {
             users = JSON.parse(storedUsers);
@@ -233,23 +226,21 @@
           }
         }
 
-        const foundUser = users.find(user => user.username === username);
+        const foundUser = users.find(user => 
+          user.username === username && user.password === password
+        );
 
         if (foundUser) {
-          // ----- Added for userId integration: retrieve the user from Dexie to get the id -----
+          // ----- Added for userId integration: retrieve the user from Dexie -----
           try {
-            // Query Dexie for a user with the same name (assumes name is unique enough)
             const dexieUser = await db.Users.where('name').equals(username).first();
             if (dexieUser) {
-              // Store the userId in localStorage for session tracking
               localStorage.setItem('currentUserId', dexieUser.id);
             } else {
-              // If user exists in localStorage but not in Dexie (should not happen), log a warning
               console.warn('User found in localStorage but not in Dexie');
             }
           } catch (err) {
             console.error('Error fetching user from Dexie:', err);
-            // Optionally show an error, but still allow login based on localStorage
           }
 
           // ----- Existing role‑based redirect (unchanged) -----
@@ -258,17 +249,14 @@
             window.location.href = 'https://ahmad-hesham-dev.github.io/SELLER-FORM-/';
           } else if (role === 'outlet') {
             window.location.href = 'https://ahmad-hesham-dev.github.io/OUTLET-FORM/';
-          }  
-           else if (role === 'Admin') {
+          } else if (role === 'Admin') {
             window.location.href = 'https://ahmad-hesham-dev.github.io/Admin-bekya/';
-          }
-          
-          else {
+          } else {
             errorDiv.textContent = 'User role not recognized.';
             errorDiv.classList.add('show');
           }
         } else {
-          errorDiv.textContent = 'Username is incorrect';
+          errorDiv.textContent = 'Username or password is incorrect';
           errorDiv.classList.add('show');
         }
       });
